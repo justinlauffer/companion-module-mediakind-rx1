@@ -5,20 +5,20 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@companion-module/base@npm:~1.11.3":
-  version: 1.11.3
-  resolution: "@companion-module/base@npm:1.11.3"
+"@companion-module/base@npm:~1.14.0":
+  version: 1.14.0
+  resolution: "@companion-module/base@npm:1.14.0"
   dependencies:
     ajv: "npm:^8.17.1"
     colord: "npm:^2.9.3"
     ejson: "npm:^2.2.3"
     eventemitter3: "npm:^5.0.1"
     mimic-fn: "npm:^3.1.0"
-    nanoid: "npm:^3.3.8"
+    nanoid: "npm:^3.3.11"
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/19acbc544de97ed8f02abf03e1d657085e51f0e92363456a84bdc1975723ba1bdfc0e943ff17444cb4e6a2b588abb794a9c5b48efb4d784be32784362e7c4efd
+  checksum: 10c0/e9d79d01d024f4cbea2b58ba66d422ed8cd874a5f092a25c7c27220b52c34bfe3e5289758cf5dd40f5f36619bcf7e9f7ad978495d8010270dfd0e85bc9c8bf58
   languageName: node
   linkType: hard
 
@@ -963,7 +963,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "mediakind-rx1@workspace:."
   dependencies:
-    "@companion-module/base": "npm:~1.11.3"
+    "@companion-module/base": "npm:~1.14.0"
     "@companion-module/tools": "npm:^2.3.0"
     prettier: "npm:^3.5.3"
   languageName: unknown
@@ -1024,7 +1024,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.8":
+"nanoid@npm:^3.3.11":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
   bin:
