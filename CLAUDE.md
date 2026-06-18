@@ -144,5 +144,5 @@ Variable IDs then follow patterns like:
 - `serviceChoices` and variable definitions are rebuilt on every `getServices()`; new services appear only after a poll cycle (or the **Refresh Services** action).
 - `feedbacks.js`'s `connection_status` checks `self.status === 2` (the numeric `InstanceStatus.Ok`) rather than a named constant — keep this in mind if status semantics change.
 - Placeholder IDs like `content_processing/SERVICE-1` in `presets.js`/`actions.js` defaults are examples; real IDs come from the device.
-</content>
-</invoke>
+  </content>
+  </invoke>

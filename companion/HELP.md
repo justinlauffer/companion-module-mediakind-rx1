@@ -11,11 +11,11 @@ and exposes live input/decode/output status as variables and feedbacks.
 
 ## Configuration
 
-| Field | Description |
-| --- | --- |
-| **RX1 IP Address** | IP address of the receiver (e.g. `192.168.1.50`). Required. |
-| **Port** | HTTP port of the REST API. Default `80`. |
-| **Enable Polling** | When on, the module periodically refreshes services and status. |
+| Field                       | Description                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| **RX1 IP Address**          | IP address of the receiver (e.g. `192.168.1.50`). Required.                           |
+| **Port**                    | HTTP port of the REST API. Default `80`.                                              |
+| **Enable Polling**          | When on, the module periodically refreshes services and status.                       |
 | **Poll Interval (seconds)** | How often to poll, `1`–`60` seconds. Default `5`. Only shown when polling is enabled. |
 
 When the connection succeeds the instance status turns **OK**. If the IP is missing it
@@ -28,21 +28,21 @@ on the receiver and don't want to wait for the next poll.
 
 ## Actions
 
-| Action | Description |
-| --- | --- |
-| **Start Service** | Start the selected service. |
-| **Stop Service** | Stop the selected service. |
-| **Toggle Service** | Start the service if stopped, stop it if started. |
-| **Start All Services** | Start every currently stopped service. |
-| **Stop All Services** | Stop every currently started service. |
-| **Refresh Services** | Re-fetch the service list and server status immediately. |
-| **Get Service Status** | Force a detailed status refresh for one service. |
-| **Get Services by Type** | Query services of a given type (Content Processing, Mux, Live Packaging, Live Encoding, Stream Conditioning, SRT, TS Splicer). |
-| **Export Service Configuration** | Fetch a service's configuration and log it (visible in Companion's log). |
-| **Assign Server to Service** | Assign a server (e.g. `Receiver1`) to a service. |
-| **Remove Server from Service** | Remove a server from a service. |
-| **Custom API GET Request** | Send an arbitrary `GET` to any API path (e.g. `/api/services`); the response is logged. |
-| **Custom API POST Request** | Send an arbitrary `POST` with an optional JSON body; the response is logged. |
+| Action                           | Description                                                                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Start Service**                | Start the selected service.                                                                                                    |
+| **Stop Service**                 | Stop the selected service.                                                                                                     |
+| **Toggle Service**               | Start the service if stopped, stop it if started.                                                                              |
+| **Start All Services**           | Start every currently stopped service.                                                                                         |
+| **Stop All Services**            | Stop every currently started service.                                                                                          |
+| **Refresh Services**             | Re-fetch the service list and server status immediately.                                                                       |
+| **Get Service Status**           | Force a detailed status refresh for one service.                                                                               |
+| **Get Services by Type**         | Query services of a given type (Content Processing, Mux, Live Packaging, Live Encoding, Stream Conditioning, SRT, TS Splicer). |
+| **Export Service Configuration** | Fetch a service's configuration and log it (visible in Companion's log).                                                       |
+| **Assign Server to Service**     | Assign a server (e.g. `Receiver1`) to a service.                                                                               |
+| **Remove Server from Service**   | Remove a server from a service.                                                                                                |
+| **Custom API GET Request**       | Send an arbitrary `GET` to any API path (e.g. `/api/services`); the response is logged.                                        |
+| **Custom API POST Request**      | Send an arbitrary `POST` with an optional JSON body; the response is logged.                                                   |
 
 The service dropdowns let you pick a discovered service or type a custom value in the form
 `serviceType/serviceId` (for example `content_processing/SERVICE-1`).
@@ -52,22 +52,22 @@ The service dropdowns let you pick a discovered service or type a custom value i
 Use these to change a button's style based on receiver state. Unless noted, each takes a
 **Service** and turns on when the condition is met.
 
-| Feedback | Turns on when… |
-| --- | --- |
-| **Service State** | The service is in the chosen state (Started / Stopped). |
-| **Service Receiving Signal** | The active input source is receiving. |
-| **Active Source** | The chosen source (Primary / Secondary) is the active one. |
-| **Input Alarm** | An input error counter (CC, Transport, TS Sync Loss, PID, PMT) exceeds a threshold. |
-| **Bitrate Threshold** | The active source bitrate is less than / greater than a value (bps). |
-| **Descrambling State** | Decode descrambling matches the chosen state (Clear / Scrambled / Descrambled / Unknown). |
-| **Decode State** | A video/audio stream is active, or its resolution/codec matches a value. |
-| **Program Detected** | A specific (or any) program number is present in the input. |
-| **Satellite Input Status** | For a satellite input: RF Lock, Receiving, or BER / C-N Margin / Signal Strength threshold. |
-| **ASI Input Status** | For an ASI input: Receiving, or bitrate above a threshold. |
-| **Service Blocked** | The service's running state is `blocked`. |
-| **Any Service Running** | At least one service is started. |
-| **All Services Stopped** | All discovered services are stopped. |
-| **Connection Status** | The module is connected to the receiver. |
+| Feedback                     | Turns on when…                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------- |
+| **Service State**            | The service is in the chosen state (Started / Stopped).                                     |
+| **Service Receiving Signal** | The active input source is receiving.                                                       |
+| **Active Source**            | The chosen source (Primary / Secondary) is the active one.                                  |
+| **Input Alarm**              | An input error counter (CC, Transport, TS Sync Loss, PID, PMT) exceeds a threshold.         |
+| **Bitrate Threshold**        | The active source bitrate is less than / greater than a value (bps).                        |
+| **Descrambling State**       | Decode descrambling matches the chosen state (Clear / Scrambled / Descrambled / Unknown).   |
+| **Decode State**             | A video/audio stream is active, or its resolution/codec matches a value.                    |
+| **Program Detected**         | A specific (or any) program number is present in the input.                                 |
+| **Satellite Input Status**   | For a satellite input: RF Lock, Receiving, or BER / C-N Margin / Signal Strength threshold. |
+| **ASI Input Status**         | For an ASI input: Receiving, or bitrate above a threshold.                                  |
+| **Service Blocked**          | The service's running state is `blocked`.                                                   |
+| **Any Service Running**      | At least one service is started.                                                            |
+| **All Services Stopped**     | All discovered services are stopped.                                                        |
+| **Connection Status**        | The module is connected to the receiver.                                                    |
 
 > Note: **Satellite Input Status**, **ASI Input Status**, **Service Blocked** and
 > **Program Detected** identify the service by its **service name** (text field) rather than
@@ -120,4 +120,4 @@ your services.
   **Refresh Services** / **Get Service Status** manually.
 - **Need to probe the API:** use **Custom API GET Request** (e.g. `/api/services`) and read
   the response in the log.
-</content>
+  </content>

@@ -7,7 +7,7 @@ it's submitted and approved.
 
 There is **no per-repo "publish" GitHub Action**. Releasing is: bump the version, tag it,
 push, then submit the tag through the Bitfocus Developer Portal. CI in this repo only
-*validates* the module (`companion-module-checks.yaml`); the Bitfocus infrastructure does
+_validates_ the module (`companion-module-checks.yaml`); the Bitfocus infrastructure does
 the actual packaging and distribution from the submitted tag.
 
 ## Prerequisites (one-time)
@@ -65,6 +65,7 @@ Two files carry the version and **must stay in sync**:
    tag for you. A GitHub Release is optional but nice for human-readable changelogs.)
 
 5. **Submit the version in the Developer Portal:**
+
    - Log in at <https://developer.bitfocus.io/> with GitHub.
    - Go to **My Connections** in the sidebar and select **MediaKind RX1** (`mediakind-rx1`).
    - Click **Submit Version**, choose the `v1.1.0` git tag, and submit.
@@ -110,4 +111,3 @@ variable id without a matching migration — it breaks existing buttons in the f
 - Module Developers' Guide — <https://companion.free/for-developers/module-development/>
 - Developer Portal — <https://developer.bitfocus.io/>
 - Module requests — <https://github.com/bitfocus/companion-module-requests>
-</content>

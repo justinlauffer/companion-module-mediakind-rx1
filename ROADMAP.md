@@ -1,7 +1,7 @@
 # Roadmap
 
 Direction for the `mediakind-rx1` Companion module. This is a living document — priorities
-shift with user feedback and MediaKind RX1 firmware changes. For *how* to ship any of this,
+shift with user feedback and MediaKind RX1 firmware changes. For _how_ to ship any of this,
 see [`RELEASING.md`](./RELEASING.md).
 
 Current version: **1.0.0** (not yet published to the Bitfocus Module Store).
@@ -31,9 +31,9 @@ Additive work; no breaking changes to config, option ids, or variable ids.
 - [ ] **Resilience:** retry/backoff for transient HTTP failures in `makeRequest`; avoid
       hammering the device when it's unreachable; surface a clean `ConnectionFailure` →
       `Ok` recovery.
-- [ ] **Reduce redundant work:** variable *definitions* are rebuilt on every poll and after
+- [ ] **Reduce redundant work:** variable _definitions_ are rebuilt on every poll and after
       every service fetch. Rebuild definitions only when the service set actually changes;
-      keep pushing *values* every poll.
+      keep pushing _values_ every poll.
 - [ ] **De-duplicate `formatBitrate`:** it's copy-pasted in `index.js` and `src/variables.js`.
       Extract to a shared `src/util.js` so formatting can't drift.
 - [ ] **Replace magic numbers:** `connection_status` feedback checks `self.status === 2`; use
@@ -58,7 +58,7 @@ Additive work; no breaking changes to config, option ids, or variable ids.
 Only do these together, behind a major bump, with `src/upgrades.js` migrations:
 
 - [ ] **Stable variable identity:** today per-service variables are keyed by a sanitized
-      *service name*, so renaming a service in the RX1 changes variable ids and breaks
+      _service name_, so renaming a service in the RX1 changes variable ids and breaks
       buttons. Consider keying on the stable `serviceId` (with friendly names as labels).
 - [ ] **Config restructure** if auth/TLS or multi-receiver support needs new/renamed fields.
 - [ ] **Multi-server / multi-receiver** support if a single instance should manage more than
@@ -71,4 +71,4 @@ Only do these together, behind a major bump, with `src/upgrades.js` migrations:
       `companion/manifest.json`, tag `vX.Y.Z`, submit via the Developer Portal.
 - [ ] Track and triage user-reported issues at
       <https://github.com/justinlauffer/companion-module-mediakind-rx1/issues>.
-</content>
+      </content>
