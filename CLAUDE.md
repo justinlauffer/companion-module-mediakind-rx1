@@ -126,6 +126,18 @@ Variable IDs then follow patterns like:
 - Dependabot (`/.github/dependabot.yml`) opens daily npm update PRs.
 - Before pushing, run `yarn format` and confirm `companion/manifest.json` stays valid (correct `id`, `runtime.entrypoint: ../index.js`, version bumped when releasing).
 
+## Releasing & roadmap
+
+- **Release process:** see [`RELEASING.md`](./RELEASING.md). In short: bump the version in
+  **both** `package.json` and `companion/manifest.json`, tag `vX.Y.Z`, push, then submit the
+  tag via the Bitfocus Developer Portal (<https://developer.bitfocus.io/>). There is no
+  per-repo publish workflow — CI only validates; Bitfocus builds/distributes from the tag.
+  Add an `src/upgrades.js` migration before any release that renames/removes config fields,
+  option ids, or variable ids.
+- **Roadmap & release-readiness checklist:** see [`ROADMAP.md`](./ROADMAP.md). Notable known
+  gaps: `companion/HELP.md` is still a stub, `formatBitrate` is duplicated, and the stats API
+  hardcodes `serverId=Receiver1`/`id=0`.
+
 ## Gotchas
 
 - The service dropdown carries `"serviceType/serviceId"`, but detailed status (`serviceStatus`) is keyed by **serviceName** — convert via `serviceIdToName` when a feedback/action only has the type/id.
