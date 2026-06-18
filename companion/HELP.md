@@ -120,4 +120,3 @@ your services.
   **Refresh Services** / **Get Service Status** manually.
 - **Need to probe the API:** use **Custom API GET Request** (e.g. `/api/services`) and read
   the response in the log.
-  </content>

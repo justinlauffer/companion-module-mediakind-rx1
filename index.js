@@ -4,6 +4,7 @@ const UpdateActions = require('./src/actions')
 const UpdateFeedbacks = require('./src/feedbacks')
 const UpdateVariableDefinitions = require('./src/variables')
 const UpdatePresets = require('./src/presets')
+const { formatBitrate, sanitizeName } = require('./src/util')
 const http = require('http')
 
 class MediaKindRX1Instance extends InstanceBase {
@@ -14,12 +15,27 @@ class MediaKindRX1Instance extends InstanceBase {
         this.serviceStatus = {}
         this.serverStatus = {}
         this.serviceIdToName = {} // Map serviceId to serviceName for lookups
+        this.isConnected = false // True while the instance status is Ok
+        this._varDefSignature = null // Last registered variable-definition signature
+    }
+
+    // Update the Companion instance status and keep this.isConnected in sync so
+    // feedbacks can check connectivity without relying on internal status codes.
+    setStatus(status, message) {
+        this.isConnected = status === InstanceStatus.Ok
+        this.updateStatus(status, message)
+    }
+
+    // The receiver's server id (used in the statistics API). Configurable so the
+    // module can target receivers that don't use the default "Receiver1".
+    getServerId() {
+        return this.config && this.config.serverId ? this.config.serverId : 'Receiver1'
     }
 
     async init(config) {
         this.config = config
 
-        this.updateStatus(InstanceStatus.Connecting)
+        this.setStatus(InstanceStatus.Connecting)
 
         this.updateActions()
         this.updateFeedbacks()
@@ -41,7 +57,7 @@ class MediaKindRX1Instance extends InstanceBase {
     async configUpdated(config) {
         this.config = config
 
-        this.updateStatus(InstanceStatus.Connecting)
+        this.setStatus(InstanceStatus.Connecting)
         this.initConnection()
     }
 
@@ -68,6 +84,14 @@ class MediaKindRX1Instance extends InstanceBase {
                 width: 4,
                 default: '80',
                 regex: Regex.PORT,
+            },
+            {
+                type: 'textinput',
+                id: 'serverId',
+                label: 'Server ID',
+                width: 12,
+                default: 'Receiver1',
+                tooltip: 'The receiver server id used by the statistics API. Leave as Receiver1 unless your unit differs.',
             },
             {
                 type: 'checkbox',
@@ -108,7 +132,7 @@ class MediaKindRX1Instance extends InstanceBase {
 
     initConnection() {
         if (!this.config.host) {
-            this.updateStatus(InstanceStatus.BadConfig)
+            this.setStatus(InstanceStatus.BadConfig)
             this.log('error', 'RX1 IP address is required')
             return
         }
@@ -151,7 +175,25 @@ class MediaKindRX1Instance extends InstanceBase {
         this.updateVariableDefinitions()
     }
 
-    makeRequest(path, method = 'GET', body = null) {
+    // Wraps a single HTTP request, retrying transient failures. Only idempotent
+    // GET requests are retried by default so we never risk double start/stop.
+    async makeRequest(path, method = 'GET', body = null, retries = null) {
+        const maxRetries = retries !== null ? retries : method === 'GET' ? 2 : 0
+        let attempt = 0
+        for (;;) {
+            try {
+                return await this._sendRequest(path, method, body)
+            } catch (error) {
+                if (attempt >= maxRetries) throw error
+                const delay = 250 * Math.pow(2, attempt)
+                this.log('debug', `Request ${method} ${path} failed (${error.message}); retrying in ${delay}ms`)
+                await new Promise((resolve) => setTimeout(resolve, delay))
+                attempt++
+            }
+        }
+    }
+
+    _sendRequest(path, method = 'GET', body = null) {
         return new Promise((resolve, reject) => {
             const options = {
                 hostname: this.config.host,
@@ -220,7 +262,7 @@ class MediaKindRX1Instance extends InstanceBase {
 
             // Update variables for each service
             this.services.forEach(service => {
-                const safeName = service.serviceName.replace(/[^a-zA-Z0-9_]/g, '_')
+                const safeName = sanitizeName(service.serviceName)
                 this.setVariableValues({
                     [`service_${safeName}_state`]: service.state,
                     [`service_${safeName}_type`]: service.serviceType,
@@ -235,17 +277,19 @@ class MediaKindRX1Instance extends InstanceBase {
             // Rebuild variable definitions when services change
             this.updateVariableDefinitions()
 
-            this.updateStatus(InstanceStatus.Ok)
+            this.setStatus(InstanceStatus.Ok)
             this.checkFeedbacks()
         } catch (error) {
-            this.updateStatus(InstanceStatus.ConnectionFailure)
+            this.setStatus(InstanceStatus.ConnectionFailure)
             this.log('error', `Failed to get services: ${error.message}`)
         }
     }
 
     async getServerStatus() {
         try {
-            const status = await this.makeRequest('/api/statistics/current?serverId=Receiver1&type=content_processing_server&id=0')
+            const status = await this.makeRequest(
+                `/api/statistics/current?serverId=${encodeURIComponent(this.getServerId())}&type=content_processing_server&id=0`
+            )
             this.serverStatus = status || {}
 
             if (status) {
@@ -334,21 +378,9 @@ class MediaKindRX1Instance extends InstanceBase {
         }
     }
 
-    formatBitrate(bitrate, receiving = true) {
-        // If not receiving signal, show "No Data"
-        if (!receiving) return 'No Data'
-        // If bitrate is undefined or null, show "No Data"
-        if (bitrate === undefined || bitrate === null) return 'No Data'
-        // If bitrate is 0, it might mean no signal
-        if (bitrate === 0) return '0 Mbps (No Signal)'
-        // Otherwise format the bitrate
-        const mbps = (bitrate / 1000000).toFixed(2)
-        return `${mbps} Mbps`
-    }
-
     updateServiceVariables(serviceName, status) {
         this.log('debug', `Updating variables for service: ${serviceName}`)
-        const safeName = serviceName.replace(/[^a-zA-Z0-9_]/g, '_')
+        const safeName = sanitizeName(serviceName)
         const vars = {}
 
         // Basic status
@@ -374,7 +406,7 @@ class MediaKindRX1Instance extends InstanceBase {
 
                     vars[`service_${safeName}_${sourceName}_type`] = source.type || 'unknown'
                     vars[`service_${safeName}_${sourceName}_receiving`] = source.receiving ? 'Yes' : 'No'
-                    vars[`service_${safeName}_${sourceName}_bitrate`] = this.formatBitrate(source.bitRate, source.receiving)
+                    vars[`service_${safeName}_${sourceName}_bitrate`] = formatBitrate(source.bitRate, source.receiving)
                     vars[`service_${safeName}_${sourceName}_bitrate_raw`] = source.bitRate || 0
                     vars[`service_${safeName}_${sourceName}_cc_errors`] = source.ccError || 0
                     vars[`service_${safeName}_${sourceName}_pid_errors`] = source.pidError || 0
@@ -413,7 +445,7 @@ class MediaKindRX1Instance extends InstanceBase {
                         vars[`service_${safeName}_video_pid`] = videoStream.pid || 0
                         // Check if we're actually decoding (have valid dimensions)
                         const isDecoding = videoStream.width > 0 && videoStream.height > 0
-                        vars[`service_${safeName}_video_bitrate`] = this.formatBitrate(videoStream.bitRate, isDecoding)
+                        vars[`service_${safeName}_video_bitrate`] = formatBitrate(videoStream.bitRate, isDecoding)
                         vars[`service_${safeName}_video_bitrate_raw`] = videoStream.bitRate || 0
                         vars[`service_${safeName}_video_width`] = videoStream.width || 0
                         vars[`service_${safeName}_video_height`] = videoStream.height || 0
@@ -433,7 +465,7 @@ class MediaKindRX1Instance extends InstanceBase {
                         vars[`service_${safeName}_audio${audioNum}_pid`] = audioStream.pid || 0
                         vars[`service_${safeName}_audio${audioNum}_lang`] = audioStream.language || 'Unknown'
                         vars[`service_${safeName}_audio${audioNum}_codec`] = audioStream.codec || 'Unknown'
-                        vars[`service_${safeName}_audio${audioNum}_bitrate`] = this.formatBitrate(audioStream.bitRate)
+                        vars[`service_${safeName}_audio${audioNum}_bitrate`] = formatBitrate(audioStream.bitRate)
                         vars[`service_${safeName}_audio${audioNum}_bitrate_raw`] = audioStream.bitRate || 0
                         vars[`service_${safeName}_audio${audioNum}_samplerate`] = audioStream.samplingRate || 0
                         vars[`service_${safeName}_audio${audioNum}_channels`] = audioStream.channelCount || 0
@@ -467,7 +499,9 @@ class MediaKindRX1Instance extends InstanceBase {
             const actualId = serviceId || serviceName
             // URL encode the ID to handle special characters
             const encodedId = encodeURIComponent(actualId)
-            const status = await this.makeRequest(`/api/statistics/current?serverId=Receiver1&type=content_processing&id=${encodedId}`)
+            const status = await this.makeRequest(
+                `/api/statistics/current?serverId=${encodeURIComponent(this.getServerId())}&type=content_processing&id=${encodedId}`
+            )
             this.serviceStatus[serviceName] = status || {}
 
             if (status) {
@@ -488,7 +522,7 @@ class MediaKindRX1Instance extends InstanceBase {
     }
 
     clearServiceVariables(serviceName) {
-        const safeName = serviceName.replace(/[^a-zA-Z0-9_]/g, '_')
+        const safeName = sanitizeName(serviceName)
         const vars = {}
 
         // Set all bitrate variables to "No Data"
