@@ -11,9 +11,9 @@ Current version: **1.0.0** (not yet published to the Bitfocus Module Store).
 These are the gaps between "works on my bench" and "ready for the public Module Store." They
 should land before — or as part of — the first store release.
 
-- [ ] **Real end-user HELP.md.** `companion/HELP.md` is still the template stub. Document the
-      config fields (host, port, polling, interval), every action, every feedback, and the
-      variable naming scheme. The store displays this to users.
+- [x] **Real end-user HELP.md.** `companion/HELP.md` documents the config fields, actions,
+      feedbacks, variable naming scheme, presets, and troubleshooting. The store displays this
+      to users.
 - [ ] **Flesh out README.md.** Currently one line. Add overview, supported devices/firmware,
       setup, and a link to HELP.md.
 - [ ] **Confirm device API assumptions.** `serverId=Receiver1` and `id=0` are hardcoded in the
