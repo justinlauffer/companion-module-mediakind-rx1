@@ -4,3 +4,10 @@ updates:
     directory: '/'
     schedule:
       interval: 'daily'
+    ignore:
+      # Keep the first release on the current Companion module API line.
+      # Revisit these together when planning an API 2.x/tooling 3.x migration.
+      - dependency-name: '@companion-module/base'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@companion-module/tools'
+        update-types: ['version-update:semver-major']
