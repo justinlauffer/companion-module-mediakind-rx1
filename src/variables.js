@@ -1,18 +1,7 @@
+const { formatBitrate, sanitizeName } = require('./util')
+
 module.exports = async function (self) {
     const variables = []
-
-    // Helper function to format bitrates
-    const formatBitrate = (bitrate, receiving = true) => {
-        // If not receiving signal, show "No Data"
-        if (!receiving) return 'No Data'
-        // If bitrate is undefined or null, show "No Data"
-        if (bitrate === undefined || bitrate === null) return 'No Data'
-        // If bitrate is 0, it might mean no signal
-        if (bitrate === 0) return '0 Mbps (No Signal)'
-        // Otherwise format the bitrate
-        const mbps = (bitrate / 1000000).toFixed(2)
-        return `${mbps} Mbps`
-    }
 
     self.log('debug', 'Starting variable definitions registration')
 
@@ -61,7 +50,7 @@ module.exports = async function (self) {
     self.log('debug', `Registering variables for ${self.services ? self.services.length : 0} services`)
     if (self.services) {
         self.services.forEach(service => {
-            const safeName = service.serviceName.replace(/[^a-zA-Z0-9_]/g, '_')
+            const safeName = sanitizeName(service.serviceName)
 
             // Basic service info
             variables.push(
@@ -160,8 +149,15 @@ module.exports = async function (self) {
         })
     }
 
-    self.log('debug', `Registering ${variables.length} total variables`)
-    self.setVariableDefinitions(variables)
+    // The set of variable definitions only changes when the list of services
+    // changes. Re-registering the same definitions on every poll is wasteful, so
+    // only call setVariableDefinitions when the definition set actually differs.
+    const signature = variables.map((v) => v.variableId).join('|')
+    if (signature !== self._varDefSignature) {
+        self.log('debug', `Registering ${variables.length} total variables`)
+        self.setVariableDefinitions(variables)
+        self._varDefSignature = signature
+    }
 
     // Set initial values
     const values = {}
@@ -228,7 +224,7 @@ module.exports = async function (self) {
     // Service-specific values
     if (self.services) {
         self.services.forEach(service => {
-            const safeName = service.serviceName.replace(/[^a-zA-Z0-9_]/g, '_')
+            const safeName = sanitizeName(service.serviceName)
 
             // Basic service info
             values[`service_${safeName}_state`] = service.state

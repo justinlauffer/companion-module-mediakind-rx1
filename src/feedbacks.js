@@ -296,7 +296,7 @@ module.exports = async function (self) {
             },
             options: [],
             callback: () => {
-                return self.status === 2
+                return self.isConnected === true
             },
         },
 

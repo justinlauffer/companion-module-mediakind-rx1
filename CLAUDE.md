@@ -20,11 +20,12 @@ The module connects to an RX1 receiver by IP/port, polls it for service and serv
 
 ```bash
 yarn install        # install dependencies
+yarn test           # run unit tests (node --test, no extra deps)
 yarn format         # run prettier -w . (uses @companion-module/tools/.prettierrc.json)
 yarn package        # build a distributable module package via companion-module-build
 ```
 
-There is **no test suite** and **no lint script** beyond prettier formatting. CI runs Bitfocus's shared module checks (see below) — there are no local unit tests to run.
+Unit tests live in `test/` and use Node's built-in `node:test` runner (no extra deps). They cover the pure helpers in `src/util.js`. There is no eslint config (deferred; see ROADMAP). CI runs Bitfocus's shared module checks (see below).
 
 ## Project Structure
 
@@ -36,13 +37,19 @@ src/
   variables.js           # setVariableDefinitions — declares all dynamic variable IDs
   presets.js             # setPresetDefinitions — ready-made button templates
   upgrades.js            # UpgradeScripts array (currently empty: module.exports = [])
+  util.js                # Pure shared helpers: formatBitrate, sanitizeName (unit-tested)
+test/
+  util.test.js           # node:test unit tests for src/util.js
 companion/
   manifest.json          # Module metadata (id, runtime, maintainer, products)
-  HELP.md                # End-user help shown in Companion (currently a stub)
+  HELP.md                # End-user help shown in Companion (full docs)
+docs/
+  API.md                 # RX1 REST API reference (endpoints/payloads this module uses)
 .github/
   workflows/companion-module-checks.yaml   # CI via bitfocus/actions module-checks
   dependabot.yml         # daily npm dependency updates
 package.json             # name "mediakind-rx1", scripts, deps
+README.md / ROADMAP.md / RELEASING.md      # overview, roadmap, release process
 ```
 
 ## Architecture
@@ -58,15 +65,15 @@ package.json             # name "mediakind-rx1", scripts, deps
 
 ### Communication
 
-- All device communication is **HTTP** via Node's built-in `http` module, wrapped in `makeRequest(path, method = 'GET', body = null)`, which returns a Promise resolving to parsed JSON (or `{}` / raw text). Non-2xx responses reject.
+- All device communication is **HTTP** via Node's built-in `http` module. `_sendRequest(...)` does one request (Promise resolving to parsed JSON, or `{}` / raw text; non-2xx rejects). `makeRequest(path, method, body, retries)` wraps it with retry + exponential backoff — **GETs retry (idempotent), POST/PUT/DELETE do not** (so we never double start/stop a service).
 - There is **no external HTTP library** — do not add `axios`/`node-fetch`; follow the existing `http.request` pattern.
 - The RX1 REST API is rooted at `/api/...`. Notable endpoints used:
   - `GET /api/services` — list of services.
   - `GET /api/services/{type}` — services of a given type.
   - `POST /api/services/{type}/{id}/start` and `/stop` — control a service.
   - `GET /api/services/{type}/{id}/config` — export service config.
-  - `GET /api/statistics/current?serverId=Receiver1&type=content_processing_server&id=0` — server status.
-  - `GET /api/statistics/current?serverId=Receiver1&type=content_processing&id={id}` — per-service status.
+  - `GET /api/statistics/current?serverId={serverId}&type=content_processing_server&id=0` — server status (`serverId` from `this.getServerId()`, default `Receiver1`, configurable).
+  - `GET /api/statistics/current?serverId={serverId}&type=content_processing&id={id}` — per-service status.
   - `PUT`/`DELETE /api/assign/services/{type}/{id}/servers/{serverId}` — assign/remove server.
 - **Always `encodeURIComponent` the service type, service ID, and server ID** when building paths (they can contain special characters). This is done consistently throughout — match it.
 
@@ -79,7 +86,7 @@ package.json             # name "mediakind-rx1", scripts, deps
   - `this.serviceStatus` — map of `serviceName → detailed status` (used by feedbacks).
   - `this.serverStatus` — last server status payload.
   - `this.serviceIdToName` — map `serviceId → serviceName` (feedbacks receive `type/id` but state is keyed by name).
-- Connection state is reported via `this.updateStatus(InstanceStatus.Ok | Connecting | BadConfig | ConnectionFailure)`.
+- Connection state is reported via `this.setStatus(InstanceStatus.Ok | Connecting | BadConfig | ConnectionFailure)` — the wrapper that also maintains the `this.isConnected` boolean. `this._varDefSignature` caches the last registered variable-definition set so `variables.js` skips redundant `setVariableDefinitions` calls.
 
 ### The four module subsystems (`src/`)
 
@@ -107,7 +114,7 @@ Variable IDs then follow patterns like:
 - Outputs: `service_{safeName}_output_type`, `_sdi_port`, `_udp_packets`
 - Server/global: `server_*`, `sdi_port_{i}_*`, `pcie_slot_{i}_*`, `total_services`, `running_services`, `stopped_services`, `blocked_services`
 
-**When adding a new per-service variable, register its definition in `src/variables.js` AND set its value where the data is produced** (`updateServiceVariables` / `getServerStatus` in `index.js`, and the value-setting block in `variables.js`). The `formatBitrate` helper (returns `"X.XX Mbps"`, `"No Data"`, or `"0 Mbps (No Signal)"`) is duplicated in both `index.js` and `variables.js` — keep the two copies in sync if you change formatting.
+**When adding a new per-service variable, register its definition in `src/variables.js` AND set its value where the data is produced** (`updateServiceVariables` / `getServerStatus` in `index.js`, and the value-setting block in `variables.js`). The `formatBitrate` helper (returns `"X.XX Mbps"`, `"No Data"`, or `"0 Mbps (No Signal)"`) and `sanitizeName` live in `src/util.js` and are imported by both `index.js` and `variables.js` — change them in one place.
 
 ## Conventions
 
@@ -135,14 +142,12 @@ Variable IDs then follow patterns like:
   Add an `src/upgrades.js` migration before any release that renames/removes config fields,
   option ids, or variable ids.
 - **Roadmap & release-readiness checklist:** see [`ROADMAP.md`](./ROADMAP.md). Notable known
-  gaps: `companion/HELP.md` is still a stub, `formatBitrate` is duplicated, and the stats API
-  hardcodes `serverId=Receiver1`/`id=0`.
+  remaining gaps: device-API validation against real hardware, auth/HTTPS, and the v2.0
+  variable-identity change.
 
 ## Gotchas
 
 - The service dropdown carries `"serviceType/serviceId"`, but detailed status (`serviceStatus`) is keyed by **serviceName** — convert via `serviceIdToName` when a feedback/action only has the type/id.
-- `serviceChoices` and variable definitions are rebuilt on every `getServices()`; new services appear only after a poll cycle (or the **Refresh Services** action).
-- `feedbacks.js`'s `connection_status` checks `self.status === 2` (the numeric `InstanceStatus.Ok`) rather than a named constant — keep this in mind if status semantics change.
+- `serviceChoices` is rebuilt on every `getServices()`; new services appear only after a poll cycle (or the **Refresh Services** action). Variable *values* push every poll, but variable *definitions* are only re-registered when the service set changes (guarded by `this._varDefSignature`).
+- `feedbacks.js`'s `connection_status` checks `self.isConnected`, a boolean kept in sync by the `setStatus()` wrapper in `index.js` (call `setStatus`, not `updateStatus`, so the flag stays correct).
 - Placeholder IDs like `content_processing/SERVICE-1` in `presets.js`/`actions.js` defaults are examples; real IDs come from the device.
-  </content>
-  </invoke>
