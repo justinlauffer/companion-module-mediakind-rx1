@@ -72,4 +72,4 @@ Only do these together, behind a major bump, with `src/upgrades.js` migrations:
 - [ ] Cut releases per [`RELEASING.md`](./RELEASING.md): bump `package.json` **and**
       `companion/manifest.json`, tag `vX.Y.Z`, submit via the Developer Portal.
 - [ ] Track and triage user-reported issues at
-      <https://github.com/justinlauffer/companion-module-mediakind-rx1/issues>.
+      <https://github.com/bitfocus/companion-module-mediakind-rx1/issues>.

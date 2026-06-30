@@ -5,8 +5,8 @@
 	"description": "Controls MediaKind RX1 IRD.",
 	"version": "1.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/justinlauffer/companion-module-mediakind-rx1.git",
-	"bugs": "https://github.com/justinlauffer/companion-module-mediakind-rx1/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-mediakind-rx1.git",
+	"bugs": "https://github.com/bitfocus/companion-module-mediakind-rx1/issues",
 	"maintainers": [
 		{
 			"name": "Justin Lauffer",

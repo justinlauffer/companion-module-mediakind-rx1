@@ -10,14 +10,14 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/justinlauffer/companion-module-mediakind-rx1.git"
+		"url": "git+https://github.com/bitfocus/companion-module-mediakind-rx1.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.11.3"
+		"@companion-module/base": "~1.14.1"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.3.0",
-		"prettier": "^3.5.3"
+		"@companion-module/tools": "^2.7.2",
+		"prettier": "^3.9.4"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json",
 	"packageManager": "yarn@4.9.1"
