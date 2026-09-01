@@ -16,7 +16,7 @@
 		"@companion-module/base": "~1.14.1"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.7.2",
+		"@companion-module/tools": "^2.8.0",
 		"prettier": "^3.9.4"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json",
